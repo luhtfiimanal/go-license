@@ -15,7 +15,7 @@ import (
 	"github.com/luhtfiimanal/go-license/pkg/licverify"
 )
 
-const version = "1.0.0"
+const version = "1.1.0"
 
 func main() {
 	// Define command-line flags
@@ -28,6 +28,7 @@ func main() {
 	genlicenseID := genlicenseCmd.String("id", "", "License ID")
 	genlicenseCustomerID := genlicenseCmd.String("customer", "", "Customer ID")
 	genlicenseProductID := genlicenseCmd.String("product", "", "Product ID")
+	genlicenseSerialNumber := genlicenseCmd.String("serial", "", "Serial number")
 	genlicenseValidDays := genlicenseCmd.Int("days", 365, "License validity in days")
 	genlicenseFeatures := genlicenseCmd.String("features", "basic", "Comma-separated list of features")
 	genlicenseMACAddresses := genlicenseCmd.String("macs", "", "Comma-separated list of MAC addresses")
@@ -62,8 +63,8 @@ func main() {
 		if *genlicenseInteractive {
 			generateInteractiveLicense(*genlicensePrivateKey, *genlicenseOutput)
 		} else {
-			if *genlicenseID == "" || *genlicenseCustomerID == "" || *genlicenseProductID == "" {
-				fmt.Println("❌ Error: License ID, Customer ID, and Product ID are required")
+			if *genlicenseID == "" || *genlicenseCustomerID == "" || *genlicenseProductID == "" || *genlicenseSerialNumber == "" {
+				fmt.Println("❌ Error: License ID, Customer ID, Product ID, and Serial Number are required")
 				fmt.Println("\nCommand options:")
 				genlicenseCmd.PrintDefaults()
 				os.Exit(1)
@@ -73,6 +74,7 @@ func main() {
 				*genlicenseID,
 				*genlicenseCustomerID,
 				*genlicenseProductID,
+				*genlicenseSerialNumber,
 				*genlicenseValidDays,
 				*genlicenseFeatures,
 				*genlicenseMACAddresses,
@@ -187,6 +189,7 @@ func generateAndSaveLicense(
 	licenseID string,
 	customerID string,
 	productID string,
+	serialNumber string,
 	validDays int,
 	featuresStr string,
 	macAddressesStr string,
@@ -227,6 +230,7 @@ func generateAndSaveLicense(
 		licenseID,
 		customerID,
 		productID,
+		serialNumber,
 		time.Duration(validDays)*24*time.Hour,
 		features,
 		hardwareIDs,
@@ -255,6 +259,7 @@ func generateAndSaveLicense(
 	fmt.Printf("   License ID: %s\n", license.ID)
 	fmt.Printf("   Customer ID: %s\n", license.CustomerID)
 	fmt.Printf("   Product ID: %s\n", license.ProductID)
+	fmt.Printf("   Serial Number: %s\n", license.SerialNumber)
 	fmt.Printf("   Issue Date: %s\n", license.IssueDate.Format(time.RFC3339))
 	fmt.Printf("   Expiry Date: %s\n", license.ExpiryDate.Format(time.RFC3339))
 
@@ -290,6 +295,7 @@ func generateInteractiveLicense(privateKeyPath, outputPath string) {
 	licenseID := promptForInput("License ID")
 	customerID := promptForInput("Customer ID")
 	productID := promptForInput("Product ID")
+	serialNumber := promptForInput("Serial Number")
 
 	// Read validity period
 	validDaysStr := promptForInput("Validity (days)", "365")
@@ -313,6 +319,7 @@ func generateInteractiveLicense(privateKeyPath, outputPath string) {
 		licenseID,
 		customerID,
 		productID,
+		serialNumber,
 		validDays,
 		featuresStr,
 		macAddressesStr,
@@ -386,6 +393,7 @@ func displayLicenseInfo(licenseFile, publicKeyFile string) {
 	fmt.Printf("   License ID: %s\n", license.ID)
 	fmt.Printf("   Customer ID: %s\n", license.CustomerID)
 	fmt.Printf("   Product ID: %s\n", license.ProductID)
+	fmt.Printf("   Serial Number: %s\n", license.SerialNumber)
 	fmt.Printf("   Issue Date: %s\n", license.IssueDate.Format(time.RFC3339))
 	fmt.Printf("   Expiry Date: %s\n", license.ExpiryDate.Format(time.RFC3339))
 

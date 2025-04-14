@@ -2,6 +2,8 @@
 
 A powerful open-source license management system built with Go that generates and manages offline-validated, hardware-bound licenses with digital signatures.
 
+**Current Version: 1.1.0**
+
 ## Overview
 
 This project provides a complete solution for software license management with two main components:
@@ -15,6 +17,7 @@ This project provides a complete solution for software license management with t
 - **Hardware Binding**: Bind licenses to specific hardware identifiers (MAC address, hard drive ID, etc.)
 - **Digital Signatures**: Secure licenses with cryptographic signatures to prevent tampering
 - **Expiration Management**: Set and enforce license expiration dates
+- **Serial Number Tracking**: Unique serial numbers for better license management and tracking
 - **Security-Focused Design**: Clear separation between generation and verification components
 
 ## Architecture
@@ -169,16 +172,16 @@ Create licenses with hardware binding and custom features:
 
 ```bash
 # Generate a license with basic information
-./licforge genlicense -id "LICENSE-001" -customer "Acme Corp" -product "SuperApp"
+./licforge genlicense -id "LICENSE-001" -customer "Acme Corp" -product "SuperApp" -serial "SN12345"
 
 # Generate a license with hardware binding
-./licforge genlicense -id "LICENSE-002" -customer "Acme Corp" -product "SuperApp" \
+./licforge genlicense -id "LICENSE-002" -customer "Acme Corp" -product "SuperApp" -serial "SN67890" \
   -macs "00:11:22:33:44:55,66:77:88:99:AA:BB" \
   -diskids "S1234567,X9876543" \
   -hostnames "server1,server2"
 
 # Generate a license with custom validity and features
-./licforge genlicense -id "LICENSE-003" -customer "Acme Corp" -product "SuperApp" \
+./licforge genlicense -id "LICENSE-003" -customer "Acme Corp" -product "SuperApp" -serial "SN-ABCDE" \
   -days 730 -features "basic,premium,enterprise" \
   -key /path/to/private.pem -output /path/to/license.lic
 ```
@@ -187,6 +190,7 @@ Options:
 - `-id` - License ID (required)
 - `-customer` - Customer ID (required)
 - `-product` - Product ID (required)
+- `-serial` - Serial number (required)
 - `-days` - License validity in days (default: 365)
 - `-features` - Comma-separated list of features (default: "basic")
 - `-macs` - Comma-separated list of MAC addresses for hardware binding

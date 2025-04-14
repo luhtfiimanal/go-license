@@ -67,6 +67,7 @@ func main() {
 	fmt.Printf("   License ID: %s\n", license.ID)
 	fmt.Printf("   Customer: %s\n", license.CustomerID)
 	fmt.Printf("   Product: %s\n", license.ProductID)
+	fmt.Printf("   Serial Number: %s\n", license.SerialNumber)
 	fmt.Printf("   Issued: %s\n", license.IssueDate.Format(time.RFC3339))
 	fmt.Printf("   Expires: %s\n", license.ExpiryDate.Format(time.RFC3339))
 

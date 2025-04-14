@@ -43,6 +43,7 @@ func TestGenerateLicense(t *testing.T) {
 		"TEST-LICENSE-001",
 		"CUSTOMER-001",
 		"PRODUCT-001",
+		"SERIAL-001",
 		365*24*time.Hour, // 1 year
 		[]string{"feature1", "feature2"},
 		hwBinding,

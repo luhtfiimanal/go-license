@@ -5,6 +5,18 @@ All notable changes to the Go License Management System will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2025-04-14
+
+### Added
+- Serial number field to license structure for better tracking and identification
+- Serial number parameter in all license generation functions
+- Serial number display in CLI tools and client examples
+
+### Changed
+- Updated license verification to include serial number validation
+- Improved documentation to reflect the new serial number field
+- Updated all test cases to include serial number
+
 ## [1.0.0] - 2025-04-14
 
 ### Added

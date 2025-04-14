@@ -48,6 +48,7 @@ func TestFullLicenseFlow(t *testing.T) {
 	licenseID := "INTEGRATION-TEST-LICENSE"
 	customerID := "INTEGRATION-TEST-CUSTOMER"
 	productID := "INTEGRATION-TEST-PRODUCT"
+	serialNumber := "INTEGRATION-TEST-SERIAL"
 	features := []string{"basic", "premium", "enterprise"}
 	expiryDuration := 365 * 24 * time.Hour // 1 year
 
@@ -55,6 +56,7 @@ func TestFullLicenseFlow(t *testing.T) {
 		licenseID,
 		customerID,
 		productID,
+		serialNumber,
 		expiryDuration,
 		features,
 		hwBinding,

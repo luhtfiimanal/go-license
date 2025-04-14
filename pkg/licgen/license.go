@@ -15,6 +15,7 @@ func GenerateLicense(
 	id string,
 	customerID string,
 	productID string,
+	serialNumber string,
 	expiryDuration time.Duration,
 	features []string,
 	hardwareIDs licverify.HardwareBinding,
@@ -22,13 +23,14 @@ func GenerateLicense(
 ) ([]byte, error) {
 	// Create the license
 	license := licverify.License{
-		ID:          id,
-		CustomerID:  customerID,
-		ProductID:   productID,
-		IssueDate:   time.Now(),
-		ExpiryDate:  time.Now().Add(expiryDuration),
-		Features:    features,
-		HardwareIDs: hardwareIDs,
+		ID:           id,
+		CustomerID:   customerID,
+		ProductID:    productID,
+		SerialNumber: serialNumber,
+		IssueDate:    time.Now(),
+		ExpiryDate:   time.Now().Add(expiryDuration),
+		Features:     features,
+		HardwareIDs:  hardwareIDs,
 	}
 
 	// Marshal the license to JSON

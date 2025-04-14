@@ -16,12 +16,13 @@ import (
 // License represents a software license with hardware binding and expiration
 type License struct {
 	// Core license data
-	ID         string    `json:"id"`
-	CustomerID string    `json:"customer_id"`
-	ProductID  string    `json:"product_id"`
-	IssueDate  time.Time `json:"issue_date"`
-	ExpiryDate time.Time `json:"expiry_date"`
-	Features   []string  `json:"features"`
+	ID           string    `json:"id"`
+	CustomerID   string    `json:"customer_id"`
+	ProductID    string    `json:"product_id"`
+	SerialNumber string    `json:"serial_number"`
+	IssueDate    time.Time `json:"issue_date"`
+	ExpiryDate   time.Time `json:"expiry_date"`
+	Features     []string  `json:"features"`
 
 	// Hardware binding data
 	HardwareIDs HardwareBinding `json:"hardware_ids"`
