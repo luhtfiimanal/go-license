@@ -5,6 +5,23 @@ All notable changes to the Go License Management System will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2025-04-29
+
+### Added
+- Binary license format for improved security and smaller file size
+- Automatic hardware detection with `--auto-hardware` flag
+- Backward compatibility for reading and verifying legacy JSON licenses
+
+### Changed
+- Licenses are now generated exclusively in binary format
+- Updated verification to support both binary and legacy JSON formats
+- Improved format detection in the `info` command
+- Updated documentation to reflect the new binary format
+
+### Removed
+- JSON license generation option (only binary format is now supported)
+- Encryption-related code (simplified the codebase)
+
 ## [1.1.0] - 2025-04-14
 
 ### Added

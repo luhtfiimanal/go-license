@@ -11,11 +11,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/luhtfiimanal/go-license/pkg/licformat"
 	"github.com/luhtfiimanal/go-license/pkg/licgen"
 	"github.com/luhtfiimanal/go-license/pkg/licverify"
 )
 
-const version = "1.1.0"
+const version = "2.0.0"
 
 func main() {
 	// Define command-line flags
@@ -36,6 +37,8 @@ func main() {
 	genlicenseHostnames := genlicenseCmd.String("hostnames", "", "Comma-separated list of hostnames")
 	genlicensePrivateKey := genlicenseCmd.String("key", "keys/private.pem", "Path to private key")
 	genlicenseOutput := genlicenseCmd.String("output", "license.lic", "Output license file")
+	// Format flag removed in v2.0.0 - binary format is now the only option
+	genlicenseAutoHardware := genlicenseCmd.Bool("auto-hardware", false, "Automatically use current hardware information")
 	genlicenseInteractive := genlicenseCmd.Bool("interactive", false, "Interactive mode")
 
 	infoCmd := flag.NewFlagSet("info", flag.ExitOnError)
@@ -61,7 +64,7 @@ func main() {
 	case "genlicense":
 		genlicenseCmd.Parse(os.Args[2:])
 		if *genlicenseInteractive {
-			generateInteractiveLicense(*genlicensePrivateKey, *genlicenseOutput)
+			runInteractiveGeneration(*genlicensePrivateKey, *genlicenseOutput)
 		} else {
 			if *genlicenseID == "" || *genlicenseCustomerID == "" || *genlicenseProductID == "" || *genlicenseSerialNumber == "" {
 				fmt.Println("❌ Error: License ID, Customer ID, Product ID, and Serial Number are required")
@@ -82,6 +85,7 @@ func main() {
 				*genlicenseHostnames,
 				*genlicensePrivateKey,
 				*genlicenseOutput,
+				*genlicenseAutoHardware,
 			)
 		}
 
@@ -197,6 +201,7 @@ func generateAndSaveLicense(
 	hostnamesStr string,
 	privateKeyPath string,
 	outputPath string,
+	autoHardware bool,
 ) {
 	fmt.Println("📜 Generating license...")
 
@@ -218,14 +223,48 @@ func generateAndSaveLicense(
 	features := parseCommaSeparatedList(featuresStr)
 
 	// Parse hardware binding
-	hardwareIDs := licverify.HardwareBinding{
-		MACAddresses: parseCommaSeparatedList(macAddressesStr),
-		DiskIDs:      parseCommaSeparatedList(diskIDsStr),
-		HostNames:    parseCommaSeparatedList(hostnamesStr),
+	var hardwareIDs licverify.HardwareBinding
+
+	if autoHardware {
+		// Get current hardware information
+		fmt.Println("💻 Detecting current hardware information...")
+		hwInfo, err := licverify.GetHardwareInfo()
+		if err != nil {
+			fmt.Printf("❌ Failed to get hardware information: %v\n", err)
+			os.Exit(1)
+		}
+
+		// Use current hardware information
+		hardwareIDs = licverify.HardwareBinding{
+			MACAddresses: hwInfo.MACAddresses,
+			DiskIDs:      hwInfo.DiskIDs,
+			HostNames:    []string{hwInfo.Hostname},
+		}
+
+		fmt.Println("✅ Hardware information detected:")
+		if len(hwInfo.MACAddresses) > 0 {
+			fmt.Printf("   MAC Addresses: %v\n", hwInfo.MACAddresses)
+		}
+		if len(hwInfo.DiskIDs) > 0 {
+			fmt.Printf("   Disk IDs: %v\n", hwInfo.DiskIDs)
+		}
+		if hwInfo.Hostname != "" {
+			fmt.Printf("   Hostname: %s\n", hwInfo.Hostname)
+		}
+	} else {
+		// Use provided hardware information
+		hardwareIDs = licverify.HardwareBinding{
+			MACAddresses: parseCommaSeparatedList(macAddressesStr),
+			DiskIDs:      parseCommaSeparatedList(diskIDsStr),
+			HostNames:    parseCommaSeparatedList(hostnamesStr),
+		}
 	}
 
 	// Generate license
 	fmt.Println("🔐 Signing license with private key...")
+	// In v2.0.0, binary format is the only option
+	fmt.Println("📦 Using binary format")
+
 	licenseData, err := licgen.GenerateLicense(
 		licenseID,
 		customerID,
@@ -250,9 +289,34 @@ func generateAndSaveLicense(
 
 	// Print license information
 	var license licverify.License
-	if err := json.Unmarshal(licenseData[:len(licenseData)-256], &license); err != nil {
-		fmt.Printf("❌ Failed to parse license data: %v\n", err)
-		os.Exit(1)
+	// Try to decode as binary first, fall back to JSON if that fails
+	licenseBytes := licenseData[:len(licenseData)-256] // Remove signature
+	// In v2.0.0, binary format is the only option for new licenses
+	// JSON format is only supported for reading legacy licenses
+	importedLicense, err := licformat.DecodeLicense(licenseBytes)
+	if err != nil {
+		// Try JSON format as fallback
+		if err := json.Unmarshal(licenseBytes, &license); err != nil {
+			fmt.Printf("❌ Failed to parse license data: %v\n", err)
+			os.Exit(1)
+		}
+	} else {
+		// Convert the imported license to licverify.License format
+		license = licverify.License{
+			ID:           importedLicense.ID,
+			CustomerID:   importedLicense.CustomerID,
+			ProductID:    importedLicense.ProductID,
+			SerialNumber: importedLicense.SerialNumber,
+			IssueDate:    importedLicense.IssueDate,
+			ExpiryDate:   importedLicense.ExpiryDate,
+			Features:     importedLicense.Features,
+			HardwareIDs: licverify.HardwareBinding{
+				MACAddresses: importedLicense.HardwareIDs.MACAddresses,
+				DiskIDs:      importedLicense.HardwareIDs.DiskIDs,
+				HostNames:    importedLicense.HardwareIDs.HostNames,
+				CustomIDs:    importedLicense.HardwareIDs.CustomIDs,
+			},
+		}
 	}
 
 	fmt.Println("\n📃 License Information:")
@@ -286,10 +350,17 @@ func generateAndSaveLicense(
 	fmt.Println("\n✨ License generated successfully!")
 }
 
-// generateInteractiveLicense generates a license interactively
-func generateInteractiveLicense(privateKeyPath, outputPath string) {
+// runInteractiveGeneration generates a license interactively
+func runInteractiveGeneration(privateKeyPath, outputPath string) {
 	fmt.Println("💬 Interactive License Generation")
-	fmt.Println("\nPlease provide the following information:")
+
+	// In v2.0.0, binary is the only format
+	fmt.Println("Note: In v2.0.0, licenses are generated in binary format only")
+
+	// Ask about auto-hardware
+	autoHardwarePrompt := "Use current hardware information (y/n)"
+	autoHardwareStr := promptForInput(autoHardwarePrompt, "y")
+	autoHardware := strings.ToLower(autoHardwareStr) == "y" || strings.ToLower(autoHardwareStr) == "yes"
 
 	// Read license information from user
 	licenseID := promptForInput("License ID")
@@ -327,6 +398,7 @@ func generateInteractiveLicense(privateKeyPath, outputPath string) {
 		hostnamesStr,
 		privateKeyPath,
 		outputPath,
+		autoHardware,
 	)
 }
 
@@ -354,6 +426,20 @@ func displayLicenseInfo(licenseFile, publicKeyFile string) {
 		fmt.Printf("❌ Failed to load license: %v\n", err)
 		os.Exit(1)
 	}
+
+	// Detect license format (binary or legacy JSON)
+	var formatType string
+	// Check if we can decode it as binary
+	licenseData, err := os.ReadFile(licenseFile)
+	if err == nil && len(licenseData) > 256 {
+		_, err := licformat.DecodeLicense(licenseData[:len(licenseData)-256])
+		if err == nil {
+			formatType = "binary"
+		} else {
+			formatType = "json (legacy)"
+		}
+	}
+	fmt.Printf("📦 License format: %s\n", formatType)
 
 	// Verify license
 	fmt.Println("🔐 Verifying license signature...")

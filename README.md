@@ -2,7 +2,7 @@
 
 A powerful open-source license management system built with Go that generates and manages offline-validated, hardware-bound licenses with digital signatures.
 
-**Current Version: 1.1.0**
+**Current Version: 2.0.0**
 
 ## Overview
 
@@ -19,6 +19,8 @@ This project provides a complete solution for software license management with t
 - **Expiration Management**: Set and enforce license expiration dates
 - **Serial Number Tracking**: Unique serial numbers for better license management and tracking
 - **Security-Focused Design**: Clear separation between generation and verification components
+- **Binary License Format**: Licenses are stored in a compact binary format that is not human-readable (v2.0.0+)
+- **Legacy Support**: Maintains backward compatibility with JSON licenses from v1.x
 
 ## Architecture
 
@@ -198,7 +200,34 @@ Options:
 - `-hostnames` - Comma-separated list of hostnames for hardware binding
 - `-key` - Path to private key (default: "keys/private.pem")
 - `-output` - Output license file path (default: "license.lic")
+- `-auto-hardware` - Automatically detect and use current hardware information
 - `-interactive` - Use interactive mode for license generation
+
+### Version 2.0.0 Changes
+
+#### Binary License Format
+
+Starting with version 2.0.0, licenses are generated exclusively in a binary format rather than JSON. This provides several benefits:
+
+- **Improved Security**: Binary licenses are not human-readable in a text editor
+- **Smaller Size**: Binary format produces more compact license files
+- **Tamper Resistance**: Combined with digital signatures, makes licenses more difficult to modify
+
+#### Backward Compatibility
+
+While new licenses are generated only in binary format, the system maintains backward compatibility:
+
+- The verification library can still read and validate legacy JSON licenses from v1.x
+- The `info` command will automatically detect and display information for both binary and legacy JSON licenses
+
+#### Hardware Auto-Detection
+
+Version 2.0.0 adds the ability to automatically detect and use the current machine's hardware information:
+
+```bash
+# Generate a license using current hardware information
+./licforge genlicense -id "LICENSE-001" -customer "Acme Corp" -product "SuperApp" -serial "SN12345" -auto-hardware
+```
 
 ### Interactive License Generation
 

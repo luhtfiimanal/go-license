@@ -9,8 +9,8 @@
 *.dylib
 
 # Project binaries
-licforge
-client-example
+licforge.exe
+client-example.exe
 
 # Test binary, built with `go test -c`
 *.test
@@ -31,13 +31,14 @@ go.work.sum
 
 # Project specific files
 keys/
-*.lic
+license.lic
 
 # IDE specific files
 .idea/
 .vscode/
 *.swp
 *.swo
+*.exe
 
 # OS specific files
 .DS_Store
