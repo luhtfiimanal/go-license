@@ -2,11 +2,11 @@ package licgen
 
 import (
 	"crypto/rsa"
-	"encoding/json"
 	"fmt"
 	"os"
 	"time"
 
+	"github.com/luhtfiimanal/go-license/pkg/licformat"
 	"github.com/luhtfiimanal/go-license/pkg/licverify"
 )
 
@@ -33,10 +33,25 @@ func GenerateLicense(
 		HardwareIDs:  hardwareIDs,
 	}
 
-	// Marshal the license to JSON
-	licenseData, err := json.Marshal(license)
+	// Convert the license to binary format
+	licenseFormatObj := licformat.License{
+		ID:           license.ID,
+		CustomerID:   license.CustomerID,
+		ProductID:    license.ProductID,
+		SerialNumber: license.SerialNumber,
+		IssueDate:    license.IssueDate,
+		ExpiryDate:   license.ExpiryDate,
+		Features:     license.Features,
+		HardwareIDs: licformat.HardwareBinding{
+			MACAddresses: license.HardwareIDs.MACAddresses,
+			DiskIDs:      license.HardwareIDs.DiskIDs,
+			HostNames:    license.HardwareIDs.HostNames,
+			CustomIDs:    license.HardwareIDs.CustomIDs},
+	}
+
+	licenseData, err := licformat.EncodeLicense(&licenseFormatObj)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal license: %v", err)
+		return nil, fmt.Errorf("failed to encode license: %v", err)
 	}
 
 	// Sign the license

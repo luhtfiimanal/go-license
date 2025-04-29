@@ -11,6 +11,8 @@ import (
 	"fmt"
 	"os"
 	"time"
+
+	"github.com/luhtfiimanal/go-license/pkg/licformat"
 )
 
 // License represents a software license with hardware binding and expiration
@@ -77,7 +79,7 @@ func (v *Verifier) LoadLicense(filePath string) (*License, error) {
 		return nil, fmt.Errorf("failed to read license file: %v", err)
 	}
 
-	// License file format: JSON data followed by signature
+	// License file format: Binary data followed by signature
 	// The last 256 bytes (for RSA-2048) are the signature
 	if len(data) < 256 {
 		return nil, errors.New("license file too small")
@@ -86,9 +88,34 @@ func (v *Verifier) LoadLicense(filePath string) (*License, error) {
 	licenseData := data[:len(data)-256]
 	signature := data[len(data)-256:]
 
-	var license License
-	if err := json.Unmarshal(licenseData, &license); err != nil {
-		return nil, fmt.Errorf("failed to parse license data: %v", err)
+	// Try binary format first (v2.0.0+)
+	importedLicense, err := licformat.DecodeLicense(licenseData)
+	if err != nil {
+		// Fallback to legacy JSON format (v1.x)
+		var license License
+		if jsonErr := json.Unmarshal(licenseData, &license); jsonErr != nil {
+			return nil, fmt.Errorf("failed to parse license data: %v (binary format error: %v)", jsonErr, err)
+		}
+		// Successfully parsed as legacy JSON format
+		license.Signature = signature
+		return &license, nil
+	}
+
+	// Convert the imported license to our internal format
+	license := License{
+		ID:           importedLicense.ID,
+		CustomerID:   importedLicense.CustomerID,
+		ProductID:    importedLicense.ProductID,
+		SerialNumber: importedLicense.SerialNumber,
+		IssueDate:    importedLicense.IssueDate,
+		ExpiryDate:   importedLicense.ExpiryDate,
+		Features:     importedLicense.Features,
+		HardwareIDs: HardwareBinding{
+			MACAddresses: importedLicense.HardwareIDs.MACAddresses,
+			DiskIDs:      importedLicense.HardwareIDs.DiskIDs,
+			HostNames:    importedLicense.HardwareIDs.HostNames,
+			CustomIDs:    importedLicense.HardwareIDs.CustomIDs,
+		},
 	}
 
 	license.Signature = signature
@@ -101,10 +128,27 @@ func (v *Verifier) VerifySignature(license *License) error {
 	licenseCopy := *license
 	licenseCopy.Signature = nil
 
-	// Marshal the license data to JSON (same format as when it was signed)
-	licenseData, err := json.Marshal(licenseCopy)
+	// Convert to binary format for verification
+	licenseFormatObj := licformat.License{
+		ID:           licenseCopy.ID,
+		CustomerID:   licenseCopy.CustomerID,
+		ProductID:    licenseCopy.ProductID,
+		SerialNumber: licenseCopy.SerialNumber,
+		IssueDate:    licenseCopy.IssueDate,
+		ExpiryDate:   licenseCopy.ExpiryDate,
+		Features:     licenseCopy.Features,
+		HardwareIDs: licformat.HardwareBinding{
+			MACAddresses: licenseCopy.HardwareIDs.MACAddresses,
+			DiskIDs:      licenseCopy.HardwareIDs.DiskIDs,
+			HostNames:    licenseCopy.HardwareIDs.HostNames,
+			CustomIDs:    licenseCopy.HardwareIDs.CustomIDs,
+		},
+	}
+
+	// Try binary format first
+	licenseData, err := licformat.EncodeLicense(&licenseFormatObj)
 	if err != nil {
-		return fmt.Errorf("failed to marshal license data: %v", err)
+		return fmt.Errorf("failed to encode license data: %v", err)
 	}
 
 	// Calculate the hash of the license data
@@ -113,7 +157,20 @@ func (v *Verifier) VerifySignature(license *License) error {
 	// Verify the signature
 	err = rsa.VerifyPKCS1v15(v.publicKey, crypto.SHA256, hashed[:], license.Signature)
 	if err != nil {
-		return fmt.Errorf("invalid license signature: %v", err)
+		// Try JSON format for backward compatibility
+		jsonData, jsonErr := json.Marshal(licenseCopy)
+		if jsonErr != nil {
+			return fmt.Errorf("failed to marshal license data: %v", jsonErr)
+		}
+
+		// Calculate the hash of the JSON data
+		hashedJSON := sha256.Sum256(jsonData)
+
+		// Verify the signature with JSON data
+		jsonVerifyErr := rsa.VerifyPKCS1v15(v.publicKey, crypto.SHA256, hashedJSON[:], license.Signature)
+		if jsonVerifyErr != nil {
+			return fmt.Errorf("invalid license signature (tried both binary and JSON formats): %v", err)
+		}
 	}
 
 	return nil
