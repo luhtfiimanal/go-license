@@ -12,7 +12,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/luhtfiimanal/go-license/pkg/licformat"
+	"github.com/luhtfiimanal/go-license/v2/pkg/licformat"
 )
 
 // License represents a software license with hardware binding and expiration

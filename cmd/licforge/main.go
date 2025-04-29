@@ -11,9 +11,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/luhtfiimanal/go-license/pkg/licformat"
-	"github.com/luhtfiimanal/go-license/pkg/licgen"
-	"github.com/luhtfiimanal/go-license/pkg/licverify"
+	"github.com/luhtfiimanal/go-license/v2/pkg/licformat"
+	"github.com/luhtfiimanal/go-license/v2/pkg/licgen"
+	"github.com/luhtfiimanal/go-license/v2/pkg/licverify"
 )
 
 const version = "2.0.0"

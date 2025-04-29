@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/luhtfiimanal/go-license/pkg/licverify"
+	"github.com/luhtfiimanal/go-license/v2/pkg/licverify"
 )
 
 // Public key will be injected at build time

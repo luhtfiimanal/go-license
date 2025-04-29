@@ -92,7 +92,7 @@ This project is designed with security in mind:
 
 1. Import the verification package:
    ```go
-   import "github.com/luhtfiimanal/go-license/pkg/licverify"
+   import "github.com/luhtfiimanal/go-license/v2/pkg/licverify"
    ```
 
 2. Create a verifier with your public key:

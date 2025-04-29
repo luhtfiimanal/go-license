@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luhtfiimanal/go-license/pkg/licgen"
-	"github.com/luhtfiimanal/go-license/pkg/licverify"
+	"github.com/luhtfiimanal/go-license/v2/pkg/licgen"
+	"github.com/luhtfiimanal/go-license/v2/pkg/licverify"
 )
 
 // TestFullLicenseFlow tests the complete license generation and verification flow

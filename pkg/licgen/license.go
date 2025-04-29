@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/luhtfiimanal/go-license/pkg/licformat"
-	"github.com/luhtfiimanal/go-license/pkg/licverify"
+	"github.com/luhtfiimanal/go-license/v2/pkg/licformat"
+	"github.com/luhtfiimanal/go-license/v2/pkg/licverify"
 )
 
 // GenerateLicense creates a new license with the provided parameters and signs it
