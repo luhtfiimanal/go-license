@@ -16,7 +16,7 @@ import (
 	"github.com/luhtfiimanal/go-license/v2/pkg/licverify"
 )
 
-const version = "2.0.0"
+const version = "2.0.1"
 
 func main() {
 	// Define command-line flags

@@ -2,7 +2,7 @@
 
 A powerful open-source license management system built with Go that generates and manages offline-validated, hardware-bound licenses with digital signatures.
 
-**Current Version: 2.0.0**
+**Current Version: 2.0.1**
 
 ## Overview
 
